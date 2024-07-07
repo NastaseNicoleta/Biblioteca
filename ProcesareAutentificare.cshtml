@@ -1,0 +1,23 @@
+﻿@model BibliotecaISS.Models.Abonat
+
+@{
+    ViewData["Title"] = "Procesare Autentificare";
+}
+
+<div>
+    <h2>Formular Autentificare</h2>
+    <form asp-action="ProcesareAutentificare" method="post">
+        <div class="form-group">
+            <label for="CNP">CNP:</label>
+            <input type="text" class="form-control" id="CNP" name="CNP">
+        </div>
+        <button type="submit" class="btn btn-primary">Autentificare</button>
+    </form>
+
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @ViewBag.ErrorMessage
+        </div>
+    }
+</div>

@@ -1,0 +1,159 @@
+﻿@model List<BibliotecaISS.ViewModels.ImprumutDetaliiViewModel>
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject BibliotecaISS.Models.BibliotecaContext _context
+
+@{
+    ViewData["Title"] = "Detalii Împrumuturi";
+}
+
+<style>
+    body {
+        background-image: url('https://images.pexels.com/photos/261806/pexels-photo-261806.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+        background-color: #f8f9fa;
+        font-family: Arial, sans-serif;
+        color: black;
+        text-align: center;
+    }
+
+    .container {
+        margin-top: 50px;
+    }
+
+    .user-info {
+        float: left;
+        margin-bottom: 20px;
+    }
+
+    .user-message {
+        font-size: 18px;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        position: absolute;
+        top: 10px; /* Distanța față de partea de sus a containerului */
+        right: 10px; /* Distanța față de partea dreaptă a containerului */
+    }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #c82333;
+        }
+
+    .table {
+        margin-top: 30px;
+        background-color: white; /* Adăugăm fundal alb pentru tabel */
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #007bff;
+        color: black;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    tr:hover {
+        background-color: #ddd;
+    }
+
+    .action-button {
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .action-button:hover {
+            background-color: #007bff;
+            color: white;
+        }
+</style>
+
+<div class="container">
+    <div class="user-info">
+        @if (!string.IsNullOrEmpty(HttpContextAccessor.HttpContext.Session.GetString("NumeAbonat")))
+        {
+            <p class="user-message">Bine ai revenit, @HttpContextAccessor.HttpContext.Session.GetString("NumeAbonat")! Acestea sunt împrumuturile tale:</p>
+        }
+        else
+        {
+            <p class="user-message">Nu ești autentificat.</p>
+        }
+        <a asp-action="Delogare" class="btn btn-danger">Delogare</a>
+    </div>
+    @{
+        string displayDateReturnare;
+    }
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Data Împrumut</th>
+                <th>Data Returnare</th>
+                <th>Titlu Carte</th>
+                <th>Autor Carte</th>
+                <th>Acțiune</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var imprumut in Model)
+            {
+                <tr>
+                    <td>@imprumut.DataImprumut.ToShortDateString()</td>
+                    <td>@Html.Raw(imprumut.DataReturnare.HasValue ? imprumut.DataReturnare.Value.ToShortDateString() : "Nereturnat")</td>
+                    <td>@imprumut.TitluCarte</td>
+                    <td>@imprumut.AutorCarte</td>
+                    <td>
+                        @if (!imprumut.DataReturnare.HasValue)
+                        {
+                            <button data-imprumut-id="@imprumut.ID" onclick="restituie(@imprumut.ID, this)" class="btn btn-secondary">Restituie</button>
+
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Folosim delegare pentru a prinde evenimentele de pe butoanele adăugate dinamic
+        $('body').on('click', '.btn-secondary', function () {
+            var imprumutId = $(this).data('imprumut-id');
+            restituie(imprumutId, this);
+        });
+    });
+
+    function restituie(imprumutId, button) {
+        console.log('Attempting to return book with ID:', imprumutId);
+        $.ajax({
+            url: '/Home/ProcesareRestituire', // Asigură-te că aceasta este ruta corectă către metoda ta din controller
+            type: 'POST',
+            data: { imprumutId: imprumutId },
+            success: function (result) {
+                if (result.success) {
+                    alert('Cartea a fost restituită cu succes!');
+                    window.location.reload(); // Reîncarcă pagina pentru a reflecta schimbările
+                } else {
+                    alert('Eroare: ' + result.message);
+                }
+            },
+            error: function () {
+                alert('Eroare de server.');
+            }
+        });
+    }
+</script>
